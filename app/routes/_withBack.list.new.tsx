@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { actions } from "astro:actions";
 import { toast } from "sonner";
-import { goToList } from "@/lib/links";
+import { goToList } from "@/lib/client/links";
 
 const schema = z.object({
   name: z.string().nonempty(),
