@@ -24,6 +24,11 @@ export const Route = createRootRoute({
       },
       { title: "TanStack Start Starter" },
     ],
+    links: [
+      { rel: "stylesheet", href: "/fontawesome/css/fontawesome.css" },
+      { rel: "stylesheet", href: "/fontawesome/css/brands.css" },
+      { rel: "stylesheet", href: "/fontawesome/css/solid.css" },
+    ],
   }),
   component: RootComponent,
 });

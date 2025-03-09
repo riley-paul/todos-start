@@ -8,7 +8,7 @@ const filePath = "count.txt";
 
 async function readCount() {
   return parseInt(
-    await fs.promises.readFile(filePath, "utf-8").catch(() => "0"),
+    await fs.promises.readFile(filePath, "utf-8").catch(() => "0")
   );
 }
 
@@ -43,7 +43,7 @@ function Home() {
         });
       }}
     >
-      Add 1 to {state}?
+      Add 1 to {state}? <i className="fas fa-plus" />
     </Button>
   );
 }
