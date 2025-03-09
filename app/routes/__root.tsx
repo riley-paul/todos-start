@@ -6,6 +6,7 @@ import {
   HeadContent,
   Scripts,
   Link,
+  createRootRouteWithContext,
 } from "@tanstack/react-router";
 import RadixProvider from "../components/radix-provider";
 
@@ -18,25 +19,28 @@ import { Heading } from "@radix-ui/themes";
 import AppSearch from "@/components/app-search";
 import PendingInvites from "@/components/pending-invites";
 import UserMenu from "@/components/user-menu";
+import type { QueryClient } from "@tanstack/react-query";
 
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
-      },
-      { title: "TanStack Start Starter" },
-    ],
-    links: [
-      { rel: "stylesheet", href: "/fontawesome/css/fontawesome.css" },
-      { rel: "stylesheet", href: "/fontawesome/css/brands.css" },
-      { rel: "stylesheet", href: "/fontawesome/css/solid.css" },
-    ],
-  }),
-  component: RootComponent,
-});
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+  {
+    head: () => ({
+      meta: [
+        { charSet: "utf-8" },
+        {
+          name: "viewport",
+          content: "width=device-width, initial-scale=1",
+        },
+        { title: "TanStack Start Starter" },
+      ],
+      links: [
+        { rel: "stylesheet", href: "/fontawesome/css/fontawesome.css" },
+        { rel: "stylesheet", href: "/fontawesome/css/brands.css" },
+        { rel: "stylesheet", href: "/fontawesome/css/solid.css" },
+      ],
+    }),
+    component: RootComponent,
+  }
+);
 
 function RootComponent() {
   return (

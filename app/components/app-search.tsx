@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listsQueryOptions, todosQueryOptions } from "@/lib/queries";
 import UserBubbleGroup from "./ui/user-bubble-group";
 import TextWithLinks from "./ui/text-with-links";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/client/utils";
 import { useNavigate } from "@tanstack/react-router";
 import useMutations from "@/hooks/use-mutations";
 import { goToList } from "@/lib/client/links";
