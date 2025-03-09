@@ -19,7 +19,7 @@ import TodoDropdown from "./todo-dropdown";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import TodoDrawer from "./todo-drawer";
 import { Link, useParams } from "@tanstack/react-router";
-import { goToList } from "@/lib/links";
+import { goToList } from "@/lib/client/links";
 
 const TodoForm: React.FC<{
   initialValue: string;
@@ -102,7 +102,7 @@ const Todo: React.FC<{ todo: TodoSelect }> = ({ todo }) => {
     <div
       ref={ref}
       className={cn(
-        "flex min-h-11 items-center gap-rx-2 rounded-3 px-rx-3 py-rx-1 transition-colors ease-out sm:hover:bg-accent-3",
+        "flex min-h-11 items-center gap-rx-2 rounded-3 px-rx-3 py-rx-1 transition-colors ease-out sm:hover:bg-accent-3"
       )}
     >
       {editorOpen ? (

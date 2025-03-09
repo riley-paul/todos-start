@@ -18,7 +18,7 @@ import TextWithLinks from "./ui/text-with-links";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import useMutations from "@/hooks/use-mutations";
-import { goToList } from "@/lib/links";
+import { goToList } from "@/lib/client/links";
 
 const AppSearch: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -75,7 +75,7 @@ const AppSearch: React.FC = () => {
                 onSelect={() =>
                   createList.mutate(
                     { name: value },
-                    { onSuccess: () => setIsOpen(false) },
+                    { onSuccess: () => setIsOpen(false) }
                   )
                 }
               >
@@ -109,7 +109,7 @@ const AppSearch: React.FC = () => {
                 onSelect={() =>
                   createTodo.mutate(
                     { text: value, listId: null },
-                    { onSuccess: () => setIsOpen(false) },
+                    { onSuccess: () => setIsOpen(false) }
                   )
                 }
               >
@@ -129,7 +129,7 @@ const AppSearch: React.FC = () => {
                 <Text
                   size="2"
                   className={cn(
-                    todo.isCompleted && "text-gray-10 line-through",
+                    todo.isCompleted && "text-gray-10 line-through"
                   )}
                 >
                   <TextWithLinks text={todo.text} />
