@@ -32,9 +32,9 @@ function RouteComponent() {
         {listId && listId !== "all" && (
           <Tooltip side="top" content="Edit List">
             <IconButton asChild size="3" radius="full">
-              <Link {...goToListEditor(listId)}>
+              {/* <Link {...goToListEditor(listId)}>
                 <i className="fas fa-pen" />
-              </Link>
+              </Link> */}
             </IconButton>
           </Tooltip>
         )}
