@@ -50,7 +50,9 @@ export const List = sqliteTable("list", {
   ...timeStamps,
 });
 export const zListSelect = createSelectSchema(List);
-export const zListInsert = createInsertSchema(List);
+export const zListInsert = createInsertSchema(List).extend({
+  name: createInsertSchema(List).shape.name.trim().min(1),
+});
 export type ListSelect = z.infer<typeof zListSelect>;
 export type ListInsert = z.infer<typeof zListInsert>;
 
@@ -81,6 +83,11 @@ export const Todo = sqliteTable("todo", {
   ...timeStamps,
 });
 export const zTodoSelect = createSelectSchema(Todo);
-export const zTodoInsert = createInsertSchema(Todo);
+export const zTodoInsert = createInsertSchema(Todo).extend({
+  text: createInsertSchema(Todo).shape.text.trim().min(1),
+  listId: createInsertSchema(Todo).shape.listId.transform((v) =>
+    v === "all" ? null : v
+  ),
+});
 export type TodoSelect = z.infer<typeof zTodoSelect>;
 export type TodoInsert = z.infer<typeof zTodoInsert>;

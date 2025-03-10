@@ -1,23 +1,18 @@
 import db from "@/db";
-import { User, Todo, ListShare, List } from "@/db/schema";
+import { User, Todo, ListShare, List, zTodoInsert } from "@/db/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 import type { TodoSelect } from "@/lib/types";
-import {
-  isAuthorized,
-  filterTodos,
-  invalidateUsers,
-  getTodoUsers,
-} from "./helpers";
+import { filterTodos, invalidateUsers, getTodoUsers } from "./helpers";
 import { createServerFn } from "@tanstack/react-start";
+import { authMiddleware } from "@/middleware";
 
 const zTodoText = z.string().trim().min(1, "Todo must not be empty");
 
-export const getTodosOfList = createServerFn({ method: "GET" })
+export const todo_get = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
   .validator(z.object({ listId: z.string().nullable() }))
-  .handler(async ({ data: { listId } }) => {
-    // const userId = isAuthorized(c).id;
-    const userId = "123";
+  .handler(async ({ data: { listId }, context: { user } }) => {
     const todos: TodoSelect[] = await db
       .selectDistinct({
         id: Todo.id,
@@ -38,57 +33,36 @@ export const getTodosOfList = createServerFn({ method: "GET" })
       .leftJoin(ListShare, eq(ListShare.listId, Todo.listId))
       .leftJoin(List, eq(List.id, Todo.listId))
       .innerJoin(User, eq(User.id, Todo.userId))
-      .where(filterTodos(userId, listId))
+      .where(filterTodos(user.id, listId))
       .orderBy(desc(Todo.createdAt))
       .then((rows) =>
-        rows.map((row) => ({ ...row, isAuthor: row.author.id === userId }))
+        rows.map((row) => ({ ...row, isAuthor: row.author.id === user.id }))
       );
-
     return todos;
   });
 
-export const create = defineAction({
-  input: z.object({
-    id: z.string().optional(),
-    listId: z
-      .string()
-      .nullable()
-      .transform((v) => (v === "all" ? null : v)),
-    text: zTodoText,
-  }),
-  handler: async (data, c) => {
-    const userId = isAuthorized(c).id;
+export const todo_create = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ data: zTodoInsert }))
+  .handler(async ({ data: { data }, context: { user } }) => {
     const todo = await db
       .insert(Todo)
-      .values({ ...data, userId })
+      .values({ ...data, userId: user.id })
       .returning()
       .then((rows) => rows[0]);
 
     invalidateUsers(await getTodoUsers(todo.id));
     return todo;
-  },
-});
+  });
 
-export const update = defineAction({
-  input: z.object({
-    id: z.string(),
-    data: z
-      .object({
-        text: zTodoText,
-        isCompleted: z.boolean(),
-        listId: z.string().nullable(),
-      })
-      .partial(),
-  }),
-  handler: async ({ id, data }, c) => {
-    const userId = isAuthorized(c).id;
+export const todo_update = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.string(), data: zTodoInsert }))
+  .handler(async ({ data: { data, id }, context: { user } }) => {
     const users = await getTodoUsers(id);
 
-    if (!users.includes(userId)) {
-      throw new ActionError({
-        code: "FORBIDDEN",
-        message: "You are not allowed to update this task",
-      });
+    if (!users.includes(user.id)) {
+      throw new Error("You do not have permission to update this task");
     }
 
     const [todo] = await db
@@ -99,42 +73,33 @@ export const update = defineAction({
 
     invalidateUsers(users);
     return todo;
-  },
-});
+  });
 
-export const remove = defineAction({
-  input: z.object({
-    id: z.string(),
-  }),
-  handler: async ({ id }, c) => {
-    const userId = isAuthorized(c).id;
+export const todo_remove = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data: { id }, context: { user } }) => {
     const users = await getTodoUsers(id);
 
-    if (!users.includes(userId)) {
-      throw new ActionError({
-        code: "FORBIDDEN",
-        message: "You are not allowed to delete this task",
-      });
+    if (!users.includes(user.id)) {
+      throw new Error("You do not have permission to delete this task");
     }
 
     await db.delete(Todo).where(eq(Todo.id, id));
 
     invalidateUsers(users);
     return true;
-  },
-});
+  });
 
-export const removeCompleted = defineAction({
-  input: z.object({
-    listId: z.union([z.string(), z.null()]),
-  }),
-  handler: async ({ listId }, c) => {
-    const userId = isAuthorized(c).id;
+export const todo_removeCompleted = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ listId: z.string() }))
+  .handler(async ({ data: { listId }, context: { user } }) => {
     const todoIds = await db
       .selectDistinct({ id: Todo.id })
       .from(Todo)
       .leftJoin(ListShare, eq(ListShare.listId, Todo.listId))
-      .where(and(filterTodos(userId, listId), eq(Todo.isCompleted, true)))
+      .where(and(filterTodos(user.id, listId), eq(Todo.isCompleted, true)))
       .then((rows) => rows.map((row) => row.id));
 
     await db
@@ -142,5 +107,4 @@ export const removeCompleted = defineAction({
       .where(and(eq(Todo.isCompleted, true), inArray(Todo.id, todoIds)));
 
     return true;
-  },
-});
+  });

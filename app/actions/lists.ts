@@ -1,24 +1,20 @@
-import { ActionError, defineAction } from "astro:actions";
 import { z } from "zod";
 import type { ListSelect } from "@/lib/types";
-import { v4 as uuid } from "uuid";
 import {
-  isAuthorized,
   filterTodos,
   invalidateUsers,
   getListUsers,
   filterByListShare,
 } from "./helpers";
 import db from "@/db";
-import { User, List, ListShare, Todo } from "@/db/schema";
+import { User, List, ListShare, Todo, zListInsert } from "@/db/schema";
 import { eq, or, asc } from "drizzle-orm";
+import { createServerFn } from "@tanstack/react-start";
+import { authMiddleware } from "@/middleware";
 
-const zListName = z.string().trim().min(1, "List name cannot be empty");
-
-export const get = defineAction({
-  handler: async (_, c) => {
-    const userId = isAuthorized(c).id;
-
+export const list_get = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context: { user } }) => {
     const lists: ListSelect[] = await db
       .selectDistinct({
         id: List.id,
@@ -33,7 +29,7 @@ export const get = defineAction({
       .from(List)
       .leftJoin(ListShare, eq(ListShare.listId, List.id))
       .innerJoin(User, eq(User.id, List.userId))
-      .where(or(eq(List.userId, userId), filterByListShare(userId)))
+      .where(or(eq(List.userId, user.id), filterByListShare(user.id)))
       .orderBy(asc(List.name))
       .then((lists) =>
         Promise.all(
@@ -43,7 +39,7 @@ export const get = defineAction({
               .selectDistinct({ todoId: Todo.id })
               .from(Todo)
               .leftJoin(ListShare, eq(ListShare.listId, Todo.listId))
-              .where(filterTodos(userId, list.id))
+              .where(filterTodos(user.id, list.id))
               .then((rows) => rows.length),
             shares: await db
               .selectDistinct({
@@ -63,74 +59,64 @@ export const get = defineAction({
                 shares.map((share) => ({
                   ...share,
                   list: { id: list.id, name: list.name, author: list.author },
-                  isAuthor: share.user.id === userId,
-                })),
+                  isAuthor: share.user.id === user.id,
+                }))
               ),
-            isAuthor: list.author.id === userId,
-          })),
-        ),
+            isAuthor: list.author.id === user.id,
+          }))
+        )
       )
       .then((rows) =>
         rows.map((row) => ({
           ...row,
           otherUsers: [...row.shares, { user: row.author }]
-            .filter((share) => share.user.id !== userId)
+            .filter((share) => share.user.id !== user.id)
             .map((share) => share.user),
-        })),
+        }))
       );
 
     return lists;
-  },
-});
+  });
 
-export const update = defineAction({
-  input: z.object({
-    id: z.string(),
-    data: z.object({ name: zListName }).partial(),
-  }),
-  handler: async ({ id, data }, c) => {
-    const userId = isAuthorized(c).id;
+export const list_update = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.string(), data: zListInsert }))
+  .handler(async ({ data: { id, data }, context: { user } }) => {
     const users = await getListUsers(id);
 
-    if (!users.includes(userId)) {
-      throw new ActionError({
-        code: "FORBIDDEN",
-        message: "You do not have permission to update this list",
-      });
+    if (!users.includes(user.id)) {
+      throw new Error("You do not have permission to update this list");
     }
 
-    const result = await db
+    const [result] = await db
       .update(List)
       .set(data)
       .where(eq(List.id, id))
-      .returning()
-      .then((rows) => rows[0]);
+      .returning();
 
     invalidateUsers(users);
     return result;
-  },
-});
+  });
 
-export const create = defineAction({
-  input: z.object({ name: zListName }),
-  handler: async ({ name }, c) => {
-    const userId = isAuthorized(c).id;
-    const result = await db
+export const list_create = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ data: zListInsert }))
+  .handler(async ({ data: { data }, context: { user } }) => {
+    const [result] = await db
       .insert(List)
-      .values({ id: uuid(), name, userId })
-      .returning()
-      .then((rows) => rows[0]);
+      .values({ ...data, userId: user.id })
+      .returning();
 
     const users = await getListUsers(result.id);
 
     invalidateUsers(users);
     return result;
-  },
-});
+  });
 
-export const remove = defineAction({
-  input: z.object({ id: z.string() }),
-  handler: async ({ id }) => {
+export const list_remove = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data: { id }, context: { user } }) => {
     const users = await getListUsers(id);
 
     await db.delete(Todo).where(eq(Todo.listId, id));
@@ -139,5 +125,4 @@ export const remove = defineAction({
 
     invalidateUsers(users);
     return true;
-  },
-});
+  });
