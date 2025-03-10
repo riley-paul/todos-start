@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { listsQueryOptions, todosQueryOptions } from "@/lib/queries";
+import { listsQueryOptions, todosQueryOptions } from "@/lib/client/queries";
 import type { SelectedList, UserSelect } from "@/lib/types";
 import UserBubbleGroup from "./ui/user-bubble-group";
 import { Button, Flex, Separator, Text } from "@radix-ui/themes";
@@ -56,10 +56,10 @@ const Lists: React.FC = () => {
           />
         ))}
         <Button asChild variant="soft" size="1" color="gray">
-          <Link to="/list/new">
+          {/* <Link to="/list/new">
             <i className="fa-solid fa-plus text-accent-10" />
             New list
-          </Link>
+          </Link> */}
         </Button>
       </div>
     </>

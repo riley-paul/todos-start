@@ -5,22 +5,24 @@ import {
   SESSION_COOKIE_NAME,
   setSessionTokenCookie,
   validateSessionToken,
+  type SessionValidationResult,
 } from "./lib/server/lucia";
-import type { UserSelect } from "./lib/types";
 
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
   const token = getCookie(SESSION_COOKIE_NAME);
-  if (!token) throw new Error("Unauthorized");
+  if (!token) {
+    return next<SessionValidationResult>({
+      context: { user: null, session: null },
+    });
+  }
 
-  const { user, session } = await validateSessionToken(token);
+  const sessionValidation = await validateSessionToken(token);
 
-  if (session) {
-    setSessionTokenCookie(token, session.expiresAt);
+  if (sessionValidation.session) {
+    setSessionTokenCookie(token, sessionValidation.session.expiresAt);
   } else {
     deleteSessionTokenCookie();
   }
 
-  if (!user) throw new Error("Unauthorized");
-
-  return next<{ user: UserSelect }>({ context: { user } });
+  return next<SessionValidationResult>({ context: sessionValidation });
 });

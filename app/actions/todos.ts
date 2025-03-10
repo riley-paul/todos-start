@@ -6,13 +6,15 @@ import type { TodoSelect } from "@/lib/types";
 import { filterTodos, invalidateUsers, getTodoUsers } from "./helpers";
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/middleware";
+import { authGuard } from "@/lib/server/utils";
 
 const zTodoText = z.string().trim().min(1, "Todo must not be empty");
 
 export const todo_get = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .validator(z.object({ listId: z.string().nullable() }))
-  .handler(async ({ data: { listId }, context: { user } }) => {
+  .handler(async ({ data: { listId }, context }) => {
+    const user = authGuard(context);
     const todos: TodoSelect[] = await db
       .selectDistinct({
         id: Todo.id,
@@ -44,7 +46,8 @@ export const todo_get = createServerFn({ method: "GET" })
 export const todo_create = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(zTodoInsert)
-  .handler(async ({ data, context: { user } }) => {
+  .handler(async ({ data, context }) => {
+    const user = authGuard(context);
     const todo = await db
       .insert(Todo)
       .values({ ...data, userId: user.id })
@@ -58,7 +61,8 @@ export const todo_create = createServerFn({ method: "POST" })
 export const todo_update = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(zTodoInsert.partial().required({ id: true }))
-  .handler(async ({ data, context: { user } }) => {
+  .handler(async ({ data, context }) => {
+    const user = authGuard(context);
     const users = await getTodoUsers(data.id);
 
     if (!users.includes(user.id)) {
@@ -78,7 +82,8 @@ export const todo_update = createServerFn({ method: "POST" })
 export const todo_remove = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ id: z.string() }))
-  .handler(async ({ data: { id }, context: { user } }) => {
+  .handler(async ({ data: { id }, context }) => {
+    const user = authGuard(context);
     const users = await getTodoUsers(id);
 
     if (!users.includes(user.id)) {
@@ -94,7 +99,8 @@ export const todo_remove = createServerFn({ method: "POST" })
 export const todo_removeCompleted = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ listId: z.string().nullable() }))
-  .handler(async ({ data: { listId }, context: { user } }) => {
+  .handler(async ({ data: { listId }, context }) => {
+    const user = authGuard(context);
     const todoIds = await db
       .selectDistinct({ id: Todo.id })
       .from(Todo)

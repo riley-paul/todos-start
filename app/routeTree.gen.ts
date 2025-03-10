@@ -11,106 +11,156 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as WithAdderImport } from './routes/_withAdder'
-import { Route as WithAdderIndexImport } from './routes/_withAdder.index'
-import { Route as WithAdderTodosListIdImport } from './routes/_withAdder.todos.$listId'
+import { Route as WelcomeImport } from './routes/welcome'
+import { Route as AppImport } from './routes/_app'
+import { Route as AppWithAdderImport } from './routes/_app._withAdder'
+import { Route as AppWithAdderIndexImport } from './routes/_app._withAdder.index'
+import { Route as AppWithAdderTodosListIdImport } from './routes/_app._withAdder.todos.$listId'
 
 // Create/Update Routes
 
-const WithAdderRoute = WithAdderImport.update({
-  id: '/_withAdder',
+const WelcomeRoute = WelcomeImport.update({
+  id: '/welcome',
+  path: '/welcome',
   getParentRoute: () => rootRoute,
 } as any)
 
-const WithAdderIndexRoute = WithAdderIndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => WithAdderRoute,
+const AppRoute = AppImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRoute,
 } as any)
 
-const WithAdderTodosListIdRoute = WithAdderTodosListIdImport.update({
+const AppWithAdderRoute = AppWithAdderImport.update({
+  id: '/_withAdder',
+  getParentRoute: () => AppRoute,
+} as any)
+
+const AppWithAdderIndexRoute = AppWithAdderIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppWithAdderRoute,
+} as any)
+
+const AppWithAdderTodosListIdRoute = AppWithAdderTodosListIdImport.update({
   id: '/todos/$listId',
   path: '/todos/$listId',
-  getParentRoute: () => WithAdderRoute,
+  getParentRoute: () => AppWithAdderRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_withAdder': {
-      id: '/_withAdder'
+    '/_app': {
+      id: '/_app'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof WithAdderImport
+      preLoaderRoute: typeof AppImport
       parentRoute: typeof rootRoute
     }
-    '/_withAdder/': {
-      id: '/_withAdder/'
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeImport
+      parentRoute: typeof rootRoute
+    }
+    '/_app/_withAdder': {
+      id: '/_app/_withAdder'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AppWithAdderImport
+      parentRoute: typeof AppImport
+    }
+    '/_app/_withAdder/': {
+      id: '/_app/_withAdder/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof WithAdderIndexImport
-      parentRoute: typeof WithAdderImport
+      preLoaderRoute: typeof AppWithAdderIndexImport
+      parentRoute: typeof AppWithAdderImport
     }
-    '/_withAdder/todos/$listId': {
-      id: '/_withAdder/todos/$listId'
+    '/_app/_withAdder/todos/$listId': {
+      id: '/_app/_withAdder/todos/$listId'
       path: '/todos/$listId'
       fullPath: '/todos/$listId'
-      preLoaderRoute: typeof WithAdderTodosListIdImport
-      parentRoute: typeof WithAdderImport
+      preLoaderRoute: typeof AppWithAdderTodosListIdImport
+      parentRoute: typeof AppWithAdderImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface WithAdderRouteChildren {
-  WithAdderIndexRoute: typeof WithAdderIndexRoute
-  WithAdderTodosListIdRoute: typeof WithAdderTodosListIdRoute
+interface AppWithAdderRouteChildren {
+  AppWithAdderIndexRoute: typeof AppWithAdderIndexRoute
+  AppWithAdderTodosListIdRoute: typeof AppWithAdderTodosListIdRoute
 }
 
-const WithAdderRouteChildren: WithAdderRouteChildren = {
-  WithAdderIndexRoute: WithAdderIndexRoute,
-  WithAdderTodosListIdRoute: WithAdderTodosListIdRoute,
+const AppWithAdderRouteChildren: AppWithAdderRouteChildren = {
+  AppWithAdderIndexRoute: AppWithAdderIndexRoute,
+  AppWithAdderTodosListIdRoute: AppWithAdderTodosListIdRoute,
 }
 
-const WithAdderRouteWithChildren = WithAdderRoute._addFileChildren(
-  WithAdderRouteChildren,
+const AppWithAdderRouteWithChildren = AppWithAdderRoute._addFileChildren(
+  AppWithAdderRouteChildren,
 )
 
+interface AppRouteChildren {
+  AppWithAdderRoute: typeof AppWithAdderRouteWithChildren
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppWithAdderRoute: AppWithAdderRouteWithChildren,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 export interface FileRoutesByFullPath {
-  '': typeof WithAdderRouteWithChildren
-  '/': typeof WithAdderIndexRoute
-  '/todos/$listId': typeof WithAdderTodosListIdRoute
+  '': typeof AppWithAdderRouteWithChildren
+  '/welcome': typeof WelcomeRoute
+  '/': typeof AppWithAdderIndexRoute
+  '/todos/$listId': typeof AppWithAdderTodosListIdRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof WithAdderIndexRoute
-  '/todos/$listId': typeof WithAdderTodosListIdRoute
+  '': typeof AppRouteWithChildren
+  '/welcome': typeof WelcomeRoute
+  '/': typeof AppWithAdderIndexRoute
+  '/todos/$listId': typeof AppWithAdderTodosListIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/_withAdder': typeof WithAdderRouteWithChildren
-  '/_withAdder/': typeof WithAdderIndexRoute
-  '/_withAdder/todos/$listId': typeof WithAdderTodosListIdRoute
+  '/_app': typeof AppRouteWithChildren
+  '/welcome': typeof WelcomeRoute
+  '/_app/_withAdder': typeof AppWithAdderRouteWithChildren
+  '/_app/_withAdder/': typeof AppWithAdderIndexRoute
+  '/_app/_withAdder/todos/$listId': typeof AppWithAdderTodosListIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '' | '/' | '/todos/$listId'
+  fullPaths: '' | '/welcome' | '/' | '/todos/$listId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/todos/$listId'
-  id: '__root__' | '/_withAdder' | '/_withAdder/' | '/_withAdder/todos/$listId'
+  to: '' | '/welcome' | '/' | '/todos/$listId'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/welcome'
+    | '/_app/_withAdder'
+    | '/_app/_withAdder/'
+    | '/_app/_withAdder/todos/$listId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  WithAdderRoute: typeof WithAdderRouteWithChildren
+  AppRoute: typeof AppRouteWithChildren
+  WelcomeRoute: typeof WelcomeRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  WithAdderRoute: WithAdderRouteWithChildren,
+  AppRoute: AppRouteWithChildren,
+  WelcomeRoute: WelcomeRoute,
 }
 
 export const routeTree = rootRoute
@@ -123,23 +173,34 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_withAdder"
+        "/_app",
+        "/welcome"
       ]
     },
-    "/_withAdder": {
-      "filePath": "_withAdder.tsx",
+    "/_app": {
+      "filePath": "_app.tsx",
       "children": [
-        "/_withAdder/",
-        "/_withAdder/todos/$listId"
+        "/_app/_withAdder"
       ]
     },
-    "/_withAdder/": {
-      "filePath": "_withAdder.index.tsx",
-      "parent": "/_withAdder"
+    "/welcome": {
+      "filePath": "welcome.tsx"
     },
-    "/_withAdder/todos/$listId": {
-      "filePath": "_withAdder.todos.$listId.tsx",
-      "parent": "/_withAdder"
+    "/_app/_withAdder": {
+      "filePath": "_app._withAdder.tsx",
+      "parent": "/_app",
+      "children": [
+        "/_app/_withAdder/",
+        "/_app/_withAdder/todos/$listId"
+      ]
+    },
+    "/_app/_withAdder/": {
+      "filePath": "_app._withAdder.index.tsx",
+      "parent": "/_app/_withAdder"
+    },
+    "/_app/_withAdder/todos/$listId": {
+      "filePath": "_app._withAdder.todos.$listId.tsx",
+      "parent": "/_app/_withAdder"
     }
   }
 }

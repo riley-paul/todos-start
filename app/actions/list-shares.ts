@@ -4,6 +4,7 @@ import { User, ListShare, List } from "@/db/schema";
 import { eq, and, or, desc } from "drizzle-orm";
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/middleware";
+import { authGuard } from "@/lib/server/utils";
 
 export const listShare_create = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -13,7 +14,8 @@ export const listShare_create = createServerFn({ method: "POST" })
       listId: z.string(),
     })
   )
-  .handler(async ({ data: { email, listId }, context: { user } }) => {
+  .handler(async ({ data: { email, listId }, context }) => {
+    const user = authGuard(context);
     const sharedUser = await db
       .select()
       .from(User)
@@ -67,7 +69,8 @@ export const listShare_create = createServerFn({ method: "POST" })
 export const listShare_remove = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ id: z.string() }))
-  .handler(async ({ data: { id }, context: { user } }) => {
+  .handler(async ({ data: { id }, context }) => {
+    const user = authGuard(context);
     const [share] = await db
       .select()
       .from(ListShare)
@@ -92,7 +95,8 @@ export const listShare_remove = createServerFn({ method: "POST" })
 export const listShare_leave = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ listId: z.string() }))
-  .handler(async ({ data: { listId }, context: { user } }) => {
+  .handler(async ({ data: { listId }, context }) => {
+    const user = authGuard(context);
     await db
       .delete(ListShare)
       .where(
@@ -104,7 +108,8 @@ export const listShare_leave = createServerFn({ method: "POST" })
 export const listShare_accept = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ id: z.string() }))
-  .handler(async ({ data: { id }, context: { user } }) => {
+  .handler(async ({ data: { id }, context }) => {
+    const user = authGuard(context);
     const [listShare] = await db
       .select()
       .from(ListShare)
@@ -128,7 +133,8 @@ export const listShare_accept = createServerFn({ method: "POST" })
 
 export const listShare_getPending = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .handler(async ({ context: { user } }) => {
+  .handler(async ({ context }) => {
+    const user = authGuard(context);
     const listShares = await db
       .selectDistinct({
         id: ListShare.id,

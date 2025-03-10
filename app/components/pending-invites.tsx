@@ -1,6 +1,6 @@
 import React from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { pendingSharesQueryOptions } from "@/lib/queries";
+import { pendingSharesQueryOptions } from "@/lib/client/queries";
 import UserBubble from "./ui/user-bubble";
 import {
   Badge,
@@ -10,16 +10,14 @@ import {
   Strong,
   Text,
 } from "@radix-ui/themes";
-import { actions } from "astro:actions";
 import { toast } from "sonner";
+import useMutations from "@/hooks/use-mutations";
 
 const PendingInvites: React.FC = () => {
   const pendingSharesQuery = useQuery(pendingSharesQueryOptions);
   const numPendingShares = pendingSharesQuery.data?.length ?? 0;
 
-  const deleteListShare = useMutation({
-    mutationFn: actions.listShares.remove.orThrow,
-  });
+  const { } = useMutations()
 
   const acceptListShare = useMutation({
     mutationFn: actions.listShares.accept.orThrow,

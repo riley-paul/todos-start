@@ -155,7 +155,7 @@ export default function useMutations() {
   const createList = useMutation({
     mutationFn: createListFn,
     onSuccess: ({ id }, { data }) => {
-      toast.success(`List "${data.data.name}" created`);
+      toast.success(`List "${data.name}" created`);
       navigate(goToList(id));
     },
   });

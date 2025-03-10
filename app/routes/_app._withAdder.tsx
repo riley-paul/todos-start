@@ -2,7 +2,7 @@ import Lists from "@/components/lists";
 import RefreshButton from "@/components/refresh-button";
 import TodoAdder from "@/components/todo-adder";
 import { goToListEditor } from "@/lib/client/links";
-// import { listsQueryOptions } from "@/lib/client/queries";
+import { listsQueryOptions } from "@/lib/client/queries";
 import { IconButton, Tooltip } from "@radix-ui/themes";
 import {
   createFileRoute,
@@ -11,11 +11,11 @@ import {
   useParams,
 } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/_withAdder")({
+export const Route = createFileRoute("/_app/_withAdder")({
   component: RouteComponent,
-  // loader: ({ context: { queryClient } }) => {
-  //   queryClient.ensureQueryData(listsQueryOptions);
-  // },
+  loader: ({ context: { queryClient } }) => {
+    queryClient.ensureQueryData(listsQueryOptions);
+  },
 });
 
 function RouteComponent() {
@@ -23,8 +23,8 @@ function RouteComponent() {
   return (
     <>
       <main className="grid gap-4">
-        {/* <TodoAdder listId={listId ?? null} />
-        <Lists /> */}
+        <TodoAdder listId={listId ?? null} />
+        <Lists />
         <Outlet />
       </main>
       <div className="fixed bottom-8 right-8 flex items-center gap-3">

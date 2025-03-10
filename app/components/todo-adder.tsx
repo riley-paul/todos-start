@@ -2,7 +2,7 @@ import React from "react";
 import { useEventListener } from "usehooks-ts";
 import useMutations from "@/hooks/use-mutations";
 import { Button, Spinner, Text, TextArea } from "@radix-ui/themes";
-import { resizeTextArea } from "@/lib/resizing-textarea";
+import { resizeTextArea } from "@/lib/client/utils";
 import { flushSync } from "react-dom";
 import type { SelectedList } from "@/lib/types";
 import { z } from "zod";
@@ -32,7 +32,7 @@ const TodoAdder: React.FC<{ listId: SelectedList }> = ({ listId }) => {
   };
 
   const onSubmit = handleSubmit(({ text }) => {
-    createTodo.mutate({ text, listId });
+    createTodo.mutate({ data: { text, listId } });
     resetInput();
   });
 

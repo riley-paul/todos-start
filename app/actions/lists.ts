@@ -11,10 +11,12 @@ import { User, List, ListShare, Todo, zListInsert } from "@/db/schema";
 import { eq, or, asc } from "drizzle-orm";
 import { createServerFn } from "@tanstack/react-start";
 import { authMiddleware } from "@/middleware";
+import { authGuard } from "@/lib/server/utils";
 
 export const list_get = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .handler(async ({ context: { user } }) => {
+  .handler(async ({ context }) => {
+    const user = authGuard(context);
     const lists: ListSelect[] = await db
       .selectDistinct({
         id: List.id,
@@ -81,7 +83,8 @@ export const list_get = createServerFn({ method: "GET" })
 export const list_update = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ id: z.string(), data: zListInsert }))
-  .handler(async ({ data: { id, data }, context: { user } }) => {
+  .handler(async ({ data: { id, data }, context }) => {
+    const user = authGuard(context);
     const users = await getListUsers(id);
 
     if (!users.includes(user.id)) {
@@ -101,7 +104,8 @@ export const list_update = createServerFn({ method: "POST" })
 export const list_create = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(zListInsert)
-  .handler(async ({ data, context: { user } }) => {
+  .handler(async ({ data, context }) => {
+    const user = authGuard(context);
     const [result] = await db
       .insert(List)
       .values({ ...data, userId: user.id })
@@ -116,7 +120,7 @@ export const list_create = createServerFn({ method: "POST" })
 export const list_remove = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(z.object({ id: z.string() }))
-  .handler(async ({ data: { id }, context: { user } }) => {
+  .handler(async ({ data: { id }, context }) => {
     const users = await getListUsers(id);
 
     await db.delete(Todo).where(eq(Todo.listId, id));

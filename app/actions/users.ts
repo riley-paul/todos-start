@@ -7,7 +7,7 @@ import { authMiddleware } from "@/middleware";
 
 export const user_getMe = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
-  .handler(async ({ context: { user } }) => {
+  .handler(async ({ context }) => {
     return db
       .select()
       .from(User)
@@ -17,7 +17,7 @@ export const user_getMe = createServerFn({ method: "GET" })
 
 export const user_remove = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .handler(async ({ context: { user } }) => {
+  .handler(async ({ context }) => {
     await db.delete(UserSession).where(eq(UserSession.userId, user.id));
     await db.delete(Todo).where(eq(Todo.userId, user.id));
     await db.delete(User).where(eq(User.id, user.id));
