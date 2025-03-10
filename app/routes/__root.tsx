@@ -61,7 +61,7 @@ function RootComponent() {
                 </div> */}
                 </div>
                 <div className="flex items-center gap-4">
-                  {/* <AppSearch /> */}
+                  <AppSearch />
                   {/* <PendingInvites /> */}
                   <UserMenu />
                 </div>

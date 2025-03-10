@@ -100,8 +100,8 @@ export const list_update = createServerFn({ method: "POST" })
 
 export const list_create = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator(z.object({ data: zListInsert }))
-  .handler(async ({ data: { data }, context: { user } }) => {
+  .validator(zListInsert)
+  .handler(async ({ data, context: { user } }) => {
     const [result] = await db
       .insert(List)
       .values({ ...data, userId: user.id })

@@ -43,8 +43,8 @@ export const todo_get = createServerFn({ method: "GET" })
 
 export const todo_create = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator(z.object({ data: zTodoInsert }))
-  .handler(async ({ data: { data }, context: { user } }) => {
+  .validator(zTodoInsert)
+  .handler(async ({ data, context: { user } }) => {
     const todo = await db
       .insert(Todo)
       .values({ ...data, userId: user.id })

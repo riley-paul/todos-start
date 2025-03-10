@@ -10,6 +10,5 @@ export const Route = createFileRoute("/_withAdder/")({
 });
 
 function RouteComponent() {
-  return null;
   return <Todos listId={null} />;
 }

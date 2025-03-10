@@ -12,7 +12,7 @@ import {
 import { Badge, IconButton, Kbd, Text, Tooltip } from "@radix-ui/themes";
 import { useEventListener } from "usehooks-ts";
 import { useQuery } from "@tanstack/react-query";
-import { listsQueryOptions, todosQueryOptions } from "@/lib/queries";
+import { listsQueryOptions, todosQueryOptions } from "@/lib/client/queries";
 import UserBubbleGroup from "./ui/user-bubble-group";
 import TextWithLinks from "./ui/text-with-links";
 import { cn } from "@/lib/client/utils";
@@ -74,7 +74,7 @@ const AppSearch: React.FC = () => {
               <CommandItem
                 onSelect={() =>
                   createList.mutate(
-                    { name: value },
+                    { data: { name: value } },
                     { onSuccess: () => setIsOpen(false) }
                   )
                 }
@@ -108,7 +108,7 @@ const AppSearch: React.FC = () => {
               <CommandItem
                 onSelect={() =>
                   createTodo.mutate(
-                    { text: value, listId: null },
+                    { data: { text: value, listId: null } },
                     { onSuccess: () => setIsOpen(false) }
                   )
                 }
