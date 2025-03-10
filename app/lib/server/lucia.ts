@@ -7,6 +7,8 @@ import { sha256 } from "@oslojs/crypto/sha2";
 import { User, UserSession } from "@/db/schema";
 import db from "@/db";
 import type { UserSelect, UserSessionInfo } from "../types";
+import { setCookie } from "@tanstack/react-start/server";
+import env from "@/env";
 
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(20);
@@ -68,6 +70,26 @@ export async function invalidateSession(sessionId: string): Promise<void> {
 
 export async function invalidateAllSessions(userId: string): Promise<void> {
   await db.delete(UserSession).where(eq(UserSession.userId, userId));
+}
+
+export function setSessionTokenCookie(token: string, expiresAt: Date): void {
+  setCookie("session", token, {
+    httpOnly: true,
+    path: "/",
+    secure: env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: expiresAt,
+  });
+}
+
+export function deleteSessionTokenCookie(): void {
+  setCookie("session", "", {
+    httpOnly: true,
+    path: "/",
+    secure: env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+  });
 }
 
 export type SessionValidationResult =
