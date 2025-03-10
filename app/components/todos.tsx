@@ -1,21 +1,17 @@
 import React from "react";
 import { cn } from "@/lib/client/utils";
 
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import Todo from "./todo";
 import { Button, Text } from "@radix-ui/themes";
 import type { SelectedList } from "@/lib/types";
 import { todosQueryOptions } from "@/lib/client/queries";
-import { useServerFn } from "@tanstack/react-start";
-import { todo_removeCompleted } from "@/actions/todos";
+import useMutations from "@/hooks/use-mutations";
 
 const Todos: React.FC<{ listId: SelectedList }> = ({ listId }) => {
   const { data: todos } = useSuspenseQuery(todosQueryOptions(listId));
 
-  const deleteCompletedTodosFn = useServerFn(todo_removeCompleted);
-  const deleteCompletedTodos = useMutation({
-    mutationFn: deleteCompletedTodosFn,
-  });
+  const { deleteCompletedTodos } = useMutations();
 
   const numCompleted = todos.filter((i) => i.isCompleted).length ?? 0;
   const [showCompleted, setShowCompleted] = React.useState(false);

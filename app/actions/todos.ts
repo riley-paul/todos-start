@@ -57,9 +57,9 @@ export const todo_create = createServerFn({ method: "POST" })
 
 export const todo_update = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string(), data: zTodoInsert }))
-  .handler(async ({ data: { data, id }, context: { user } }) => {
-    const users = await getTodoUsers(id);
+  .validator(zTodoInsert.partial().required({ id: true }))
+  .handler(async ({ data, context: { user } }) => {
+    const users = await getTodoUsers(data.id);
 
     if (!users.includes(user.id)) {
       throw new Error("You do not have permission to update this task");
@@ -68,7 +68,7 @@ export const todo_update = createServerFn({ method: "POST" })
     const [todo] = await db
       .update(Todo)
       .set(data)
-      .where(and(eq(Todo.id, id)))
+      .where(and(eq(Todo.id, data.id)))
       .returning();
 
     invalidateUsers(users);

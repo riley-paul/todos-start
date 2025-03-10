@@ -19,6 +19,7 @@ import { useIsMobile } from "@/hooks/use-is-mobile";
 import TodoDrawer from "./todo-drawer";
 import { Link, useParams } from "@tanstack/react-router";
 import { goToList } from "@/lib/client/links";
+import useMutations from "@/hooks/use-mutations";
 
 const TodoForm: React.FC<{
   initialValue: string;
@@ -84,7 +85,7 @@ const Todo: React.FC<{ todo: TodoSelect }> = ({ todo }) => {
   const { listId } = useParams({ strict: false });
 
   const [editorOpen, setEditorOpen] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
+  const ref = React.useRef<HTMLDivElement>(null as any);
 
   const isMobile = useIsMobile();
 
@@ -109,8 +110,10 @@ const Todo: React.FC<{ todo: TodoSelect }> = ({ todo }) => {
           initialValue={todo.text}
           handleSubmit={(text) => {
             updateTodo.mutate({
-              id: todo.id,
-              data: { text },
+              data: {
+                id: todo.id,
+                text,
+              },
             });
             setEditorOpen(false);
           }}
@@ -124,8 +127,10 @@ const Todo: React.FC<{ todo: TodoSelect }> = ({ todo }) => {
               checked={todo.isCompleted}
               onCheckedChange={() =>
                 updateTodo.mutate({
-                  id: todo.id,
-                  data: { isCompleted: !todo.isCompleted },
+                  data: {
+                    id: todo.id,
+                    isCompleted: !todo.isCompleted,
+                  },
                 })
               }
             />
@@ -151,18 +156,18 @@ const Todo: React.FC<{ todo: TodoSelect }> = ({ todo }) => {
           {!todo.isAuthor && <UserBubble user={todo.author} size="md" />}
           {isMobile ? (
             <TodoDrawer
-              handleDelete={() => deleteTodo.mutate({ id: todo.id })}
+              handleDelete={() => deleteTodo.mutate({ data: { id: todo.id } })}
               handleEdit={() => setEditorOpen(true)}
               handleMove={(listId) =>
-                moveTodo.mutate({ id: todo.id, data: { listId } })
+                moveTodo.mutate({ data: { id: todo.id, listId } })
               }
             />
           ) : (
             <TodoDropdown
-              handleDelete={() => deleteTodo.mutate({ id: todo.id })}
+              handleDelete={() => deleteTodo.mutate({ data: { id: todo.id } })}
               handleEdit={() => setEditorOpen(true)}
               handleMove={(listId) =>
-                moveTodo.mutate({ id: todo.id, data: { listId } })
+                moveTodo.mutate({ data: { id: todo.id, listId } })
               }
             />
           )}

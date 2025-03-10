@@ -54,9 +54,11 @@ export default function useMutations() {
   const updateTodoFn = useServerFn(todo_update);
   const updateTodo = useMutation({
     mutationFn: updateTodoFn,
-    onMutate: async ({ data: { id, data } }) => {
+    onMutate: async ({ data }) => {
       const updater: TodosUpdater = (todos = []) =>
-        todos.map((todo) => (todo.id === id ? { ...todo, ...data } : todo));
+        todos.map((todo) =>
+          todo.id === data.id ? { ...todo, ...data } : todo
+        );
 
       const resetters = await Promise.all([
         modifyTodoCache(selectedList, updater),
@@ -128,14 +130,7 @@ export default function useMutations() {
     onError: (__, _, context) => {
       context?.resetters.forEach((reset) => reset());
     },
-    onSuccess: (
-      _,
-      {
-        data: {
-          data: { listId },
-        },
-      }
-    ) => {
+    onSuccess: (_, { data: { listId } }) => {
       const lists = queryClient.getQueryData(listsQueryOptions.queryKey);
       const nextList = lists?.find((list) => list.id === listId);
       toast.success(`Todo moved to ${nextList?.name ?? "Unknown"}`);
