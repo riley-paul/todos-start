@@ -8,7 +8,7 @@ import type { SelectedList } from "@/lib/types";
 import { z } from "zod";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { mergeRefs } from "@/lib/utils";
+import { mergeRefs } from "@/lib/client/utils";
 
 const schema = z.object({
   text: z.string().nonempty("Todo text cannot be empty"),

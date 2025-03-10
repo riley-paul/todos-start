@@ -1,41 +1,33 @@
-import { defineAction } from "astro:actions";
 import { z } from "zod";
-import { isAuthorized } from "./helpers";
 import db from "@/db";
 import { Todo, User, UserSession } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { createServerFn } from "@tanstack/react-start";
+import { authMiddleware } from "@/middleware";
 
-export const getMe = defineAction({
-  handler: async (_, c) => {
-    const user = c.locals.user;
-    if (!user) {
-      return null;
-    }
-    const data = await db
+export const user_getMe = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context: { user } }) => {
+    return db
       .select()
       .from(User)
       .where(eq(User.id, user.id))
-      .then((rows) => rows[0]);
-    return data;
-  },
-});
+      .then(([res]) => res);
+  });
 
-export const remove = defineAction({
-  handler: async (_, c) => {
-    const userId = isAuthorized(c).id;
-    await db.delete(UserSession).where(eq(UserSession.userId, userId));
-    await db.delete(Todo).where(eq(Todo.userId, userId));
-    await db.delete(User).where(eq(User.id, userId));
+export const user_remove = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .handler(async ({ context: { user } }) => {
+    await db.delete(UserSession).where(eq(UserSession.userId, user.id));
+    await db.delete(Todo).where(eq(Todo.userId, user.id));
+    await db.delete(User).where(eq(User.id, user.id));
     return true;
-  },
-});
+  });
 
-export const checkIfEmailExists = defineAction({
-  input: z.object({
-    email: z.string(),
-  }),
-  handler: async ({ email }) => {
+export const user_checkIfEmailExists = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ email: z.string().email() }))
+  .handler(async ({ data: { email } }) => {
     const data = await db.select().from(User).where(eq(User.email, email));
     return data.length > 0;
-  },
-});
+  });

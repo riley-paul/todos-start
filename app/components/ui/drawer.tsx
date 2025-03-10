@@ -1,7 +1,7 @@
 import React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/client/utils";
 import { Portal } from "@radix-ui/themes";
 import RadixProvider from "../radix-provider";
 
@@ -43,7 +43,7 @@ const DrawerContent = React.forwardRef<
         ref={ref}
         className={cn(
           "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-fit flex-col rounded-t-3 border bg-panel-solid",
-          className,
+          className
         )}
         {...props}
       >

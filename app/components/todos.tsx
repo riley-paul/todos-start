@@ -1,5 +1,5 @@
 import React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/client/utils";
 import useMutations from "@/hooks/use-mutations";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -48,7 +48,7 @@ const Todos: React.FC<{ listId: SelectedList }> = ({ listId }) => {
               <i
                 className={cn(
                   "fa-solid fa-chevron-right transition-transform duration-200",
-                  showCompleted && "rotate-90",
+                  showCompleted && "rotate-90"
                 )}
               />
             </Button>

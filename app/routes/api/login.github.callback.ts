@@ -7,7 +7,6 @@ import {
 } from "@/lib/server/lucia";
 import { getGithubUser, github } from "@/lib/server/oauth";
 import { redirect } from "@tanstack/react-router";
-import { json } from "@tanstack/react-start";
 import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { getCookie } from "@tanstack/react-start/server";
 import { OAuth2RequestError } from "arctic";

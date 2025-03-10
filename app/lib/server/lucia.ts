@@ -10,6 +10,8 @@ import type { UserSelect, UserSessionInfo } from "../types";
 import { setCookie } from "@tanstack/react-start/server";
 import env from "@/env";
 
+export const SESSION_COOKIE_NAME = "session";
+
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(20);
   crypto.getRandomValues(bytes);
@@ -73,7 +75,7 @@ export async function invalidateAllSessions(userId: string): Promise<void> {
 }
 
 export function setSessionTokenCookie(token: string, expiresAt: Date): void {
-  setCookie("session", token, {
+  setCookie(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     path: "/",
     secure: env.NODE_ENV === "production",
@@ -83,7 +85,7 @@ export function setSessionTokenCookie(token: string, expiresAt: Date): void {
 }
 
 export function deleteSessionTokenCookie(): void {
-  setCookie("session", "", {
+  setCookie(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
     path: "/",
     secure: env.NODE_ENV === "production",

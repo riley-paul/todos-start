@@ -1,8 +1,7 @@
 import React from "react";
 
 import LoginButton from "./login-button";
-import { useQuery } from "@tanstack/react-query";
-import { userQueryOptions } from "@/lib/queries";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Avatar,
   Button,
@@ -12,10 +11,16 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import useConfirmDialog from "@/hooks/use-confirm-dialog";
-import useMutations from "@/hooks/use-mutations";
+import { user_remove } from "@/actions/users";
+import { userQueryOptions } from "@/lib/client/queries";
 
 const UserMenu: React.FC = () => {
-  const { deleteUser } = useMutations();
+  const deleteUser = useMutation({
+    mutationFn: user_remove,
+    onSuccess: () => {
+      window.location.reload();
+    },
+  });
 
   const [DeletionDialog, confirmDeletion] = useConfirmDialog({
     title: "Delete Account",

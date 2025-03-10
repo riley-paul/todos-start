@@ -1,6 +1,6 @@
 import React from "react";
 import { isActionError } from "astro:actions";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/client/utils";
 import { Button, Heading, Text } from "@radix-ui/themes";
 
 interface Props {
@@ -26,7 +26,7 @@ const ErrorPage: React.FC<Props> = (props) => {
     <div
       className={cn(
         "flex items-center justify-center",
-        notFullHeight && "min-h-52",
+        notFullHeight && "min-h-52"
       )}
     >
       <div className="flex h-full w-full max-w-sm flex-col gap-4 px-4 py-16">

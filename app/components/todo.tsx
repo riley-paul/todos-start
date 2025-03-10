@@ -12,7 +12,7 @@ import {
   Text,
   TextArea,
 } from "@radix-ui/themes";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/client/utils";
 import { focusInputAtEnd, resizeTextArea } from "@/lib/resizing-textarea";
 import TextWithLinks from "./ui/text-with-links";
 import TodoDropdown from "./todo-dropdown";
