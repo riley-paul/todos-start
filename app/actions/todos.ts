@@ -1,4 +1,3 @@
-import { ActionError, defineAction } from "astro:actions";
 import db from "@/db";
 import { User, Todo, ListShare, List } from "@/db/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
@@ -10,15 +9,15 @@ import {
   invalidateUsers,
   getTodoUsers,
 } from "./helpers";
+import { createServerFn } from "@tanstack/react-start";
 
 const zTodoText = z.string().trim().min(1, "Todo must not be empty");
 
-export const get = defineAction({
-  input: z.object({
-    listId: z.union([z.string(), z.null()]),
-  }),
-  handler: async ({ listId }, c) => {
-    const userId = isAuthorized(c).id;
+export const getTodosOfList = createServerFn({ method: "GET" })
+  .validator(z.object({ listId: z.string().nullable() }))
+  .handler(async ({ data: { listId } }) => {
+    // const userId = isAuthorized(c).id;
+    const userId = "123";
     const todos: TodoSelect[] = await db
       .selectDistinct({
         id: Todo.id,
@@ -42,12 +41,11 @@ export const get = defineAction({
       .where(filterTodos(userId, listId))
       .orderBy(desc(Todo.createdAt))
       .then((rows) =>
-        rows.map((row) => ({ ...row, isAuthor: row.author.id === userId })),
+        rows.map((row) => ({ ...row, isAuthor: row.author.id === userId }))
       );
 
     return todos;
-  },
-});
+  });
 
 export const create = defineAction({
   input: z.object({
