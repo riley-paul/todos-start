@@ -1,24 +1,22 @@
-import type { ActionAPIContext } from "astro/actions/runtime/utils.js";
-import { ActionError } from "astro:actions";
-import InvalidationController from "@/lib/invalidation-controller";
+// import InvalidationController from "@/lib/invalidation-controller";
 import db from "@/db";
 import { List, ListShare, Todo } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
 export const invalidateUsers = (userIds: string[]) => {
-  InvalidationController.getInstance().invalidateKey(userIds);
+  // InvalidationController.getInstance().invalidateKey(userIds);
 };
 
-export const isAuthorized = (context: ActionAPIContext) => {
-  const user = context.locals.user;
-  if (!user) {
-    throw new ActionError({
-      code: "UNAUTHORIZED",
-      message: "You are not logged in.",
-    });
-  }
-  return user;
-};
+// export const isAuthorized = (context: ActionAPIContext) => {
+//   const user = context.locals.user;
+//   if (!user) {
+//     throw new ActionError({
+//       code: "UNAUTHORIZED",
+//       message: "You are not logged in.",
+//     });
+//   }
+//   return user;
+// };
 
 export const getListUsers = async (listId: string): Promise<string[]> => {
   const list = await db
@@ -28,10 +26,7 @@ export const getListUsers = async (listId: string): Promise<string[]> => {
     .then((rows) => rows[0]);
 
   if (!list) {
-    throw new ActionError({
-      code: "NOT_FOUND",
-      message: "List not found",
-    });
+    throw new Error("List not found");
   }
 
   const shares = await db
@@ -50,10 +45,7 @@ export const getTodoUsers = async (todoId: string): Promise<string[]> => {
     .then((rows) => rows[0]);
 
   if (!todo) {
-    throw new ActionError({
-      code: "NOT_FOUND",
-      message: "Task not found",
-    });
+    throw new Error("Todo not found");
   }
 
   if (!todo.listId) {

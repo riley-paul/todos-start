@@ -1,18 +1,19 @@
-import { ActionError, defineAction } from "astro:actions";
 import { z } from "zod";
-import { isAuthorized } from "./helpers";
 import db from "@/db";
 import { User, ListShare, List } from "@/db/schema";
 import { eq, and, or, desc } from "drizzle-orm";
+import { createServerFn } from "@tanstack/react-start";
+import { authMiddleware } from "@/middleware";
 
-export const create = defineAction({
-  input: z.object({
-    email: z.string().email(),
-    listId: z.string(),
-  }),
-  handler: async ({ email, listId }, c) => {
-    const userId = isAuthorized(c).id;
-
+export const listShare_create = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(
+    z.object({
+      email: z.string().email(),
+      listId: z.string(),
+    })
+  )
+  .handler(async ({ data: { email, listId }, context: { user } }) => {
     const sharedUser = await db
       .select()
       .from(User)
@@ -20,37 +21,21 @@ export const create = defineAction({
       .then((rows) => rows[0]);
 
     if (!sharedUser) {
-      throw new ActionError({
-        message: "User with email not found",
-        code: "BAD_REQUEST",
-      });
+      throw new Error("User with email not found");
     }
 
-    if (sharedUser.id === userId) {
-      throw new ActionError({
-        message: "You cannot share a list with yourself",
-        code: "BAD_REQUEST",
-      });
+    if (sharedUser.id === user.id) {
+      throw new Error("You cannot share a list with yourself");
     }
 
-    const list = await db
-      .select()
-      .from(List)
-      .where(eq(List.id, listId))
-      .then((rows) => rows[0]);
+    const [list] = await db.select().from(List).where(eq(List.id, listId));
 
     if (!list) {
-      throw new ActionError({
-        message: "List not found",
-        code: "NOT_FOUND",
-      });
+      throw new Error("List not found");
     }
 
-    if (list.userId !== userId) {
-      throw new ActionError({
-        message: "You do not have permission to share this list",
-        code: "FORBIDDEN",
-      });
+    if (list.userId !== user.id) {
+      throw new Error("You do not have permission to share this list");
     }
 
     const existingShares = await db
@@ -59,45 +44,37 @@ export const create = defineAction({
       .where(
         and(
           eq(ListShare.listId, listId),
-          eq(ListShare.sharedUserId, sharedUser.id),
-        ),
+          eq(ListShare.sharedUserId, sharedUser.id)
+        )
       );
 
     if (existingShares.length > 0) {
-      throw new ActionError({
-        message: "User already has access to this list",
-        code: "BAD_REQUEST",
-      });
+      throw new Error("User already has access to this list");
     }
 
-    const listShare = await db
+    const [listShare] = await db
       .insert(ListShare)
       .values({
         listId,
-        userId,
+        userId: user.id,
         sharedUserId: sharedUser.id,
       })
-      .returning()
-      .then((rows) => rows[0]);
+      .returning();
 
     return listShare;
-  },
-});
+  });
 
-export const remove = defineAction({
-  input: z.object({ id: z.string() }),
-  handler: async ({ id }, c) => {
-    const userId = isAuthorized(c).id;
+export const listShare_remove = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data: { id }, context: { user } }) => {
     const [share] = await db
       .select()
       .from(ListShare)
       .where(eq(ListShare.id, id));
 
-    if (share.sharedUserId !== userId && share.userId !== userId) {
-      throw new ActionError({
-        message: "You do not have permission to delete this share",
-        code: "FORBIDDEN",
-      });
+    if (share.sharedUserId !== user.id && share.userId !== user.id) {
+      throw new Error("You do not have permission to cancel this share");
     }
 
     await db
@@ -105,66 +82,53 @@ export const remove = defineAction({
       .where(
         and(
           eq(ListShare.id, id),
-          or(eq(ListShare.userId, userId), eq(ListShare.sharedUserId, userId)),
-        ),
+          or(eq(ListShare.userId, user.id), eq(ListShare.sharedUserId, user.id))
+        )
       );
 
     return true;
-  },
-});
+  });
 
-export const leave = defineAction({
-  input: z.object({ listId: z.string() }),
-  handler: async ({ listId }, c) => {
-    const userId = isAuthorized(c).id;
-
+export const listShare_leave = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ listId: z.string() }))
+  .handler(async ({ data: { listId }, context: { user } }) => {
     await db
       .delete(ListShare)
       .where(
-        and(eq(ListShare.listId, listId), eq(ListShare.sharedUserId, userId)),
+        and(eq(ListShare.listId, listId), eq(ListShare.sharedUserId, user.id))
       );
-
     return true;
-  },
-});
+  });
 
-export const accept = defineAction({
-  input: z.object({ id: z.string() }),
-  handler: async ({ id }, c) => {
-    const userId = isAuthorized(c).id;
-
-    const listShare = await db
+export const listShare_accept = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data: { id }, context: { user } }) => {
+    const [listShare] = await db
       .select()
       .from(ListShare)
-      .where(eq(ListShare.id, id))
-      .then((rows) => rows[0]);
+      .where(eq(ListShare.id, id));
 
     if (!listShare) {
-      throw new ActionError({
-        message: "List share not found",
-        code: "NOT_FOUND",
-      });
+      throw new Error("List share not found");
     }
 
-    if (listShare.sharedUserId !== userId) {
-      throw new ActionError({
-        message: "You do not have permission to accept this share",
-        code: "FORBIDDEN",
-      });
+    if (listShare.sharedUserId !== user.id) {
+      throw new Error("You do not have permission to accept this share");
     }
 
     await db
       .update(ListShare)
       .set({ isPending: false })
-      .where(and(eq(ListShare.id, id), eq(ListShare.sharedUserId, userId)));
+      .where(and(eq(ListShare.id, id), eq(ListShare.sharedUserId, user.id)));
 
     return listShare;
-  },
-});
+  });
 
-export const getPending = defineAction({
-  handler: async (_, c) => {
-    const userId = isAuthorized(c).id;
+export const listShare_getPending = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context: { user } }) => {
     const listShares = await db
       .selectDistinct({
         id: ListShare.id,
@@ -184,9 +148,8 @@ export const getPending = defineAction({
       .innerJoin(User, eq(User.id, ListShare.userId))
       .innerJoin(List, eq(List.id, ListShare.listId))
       .where(
-        and(eq(ListShare.sharedUserId, userId), eq(ListShare.isPending, true)),
+        and(eq(ListShare.sharedUserId, user.id), eq(ListShare.isPending, true))
       )
       .orderBy(desc(ListShare.createdAt));
     return listShares;
-  },
-});
+  });
