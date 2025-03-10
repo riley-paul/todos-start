@@ -1,16 +1,21 @@
 import React from "react";
 import { cn } from "@/lib/client/utils";
-import useMutations from "@/hooks/use-mutations";
 
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import Todo from "./todo";
 import { Button, Text } from "@radix-ui/themes";
 import type { SelectedList } from "@/lib/types";
-import { todosQueryOptions } from "@/lib/queries";
+import { todosQueryOptions } from "@/lib/client/queries";
+import { useServerFn } from "@tanstack/react-start";
+import { todo_removeCompleted } from "@/actions/todos";
 
 const Todos: React.FC<{ listId: SelectedList }> = ({ listId }) => {
   const { data: todos } = useSuspenseQuery(todosQueryOptions(listId));
-  const { deleteCompletedTodos } = useMutations();
+
+  const deleteCompletedTodosFn = useServerFn(todo_removeCompleted);
+  const deleteCompletedTodos = useMutation({
+    mutationFn: deleteCompletedTodosFn,
+  });
 
   const numCompleted = todos.filter((i) => i.isCompleted).length ?? 0;
   const [showCompleted, setShowCompleted] = React.useState(false);
@@ -56,7 +61,7 @@ const Todos: React.FC<{ listId: SelectedList }> = ({ listId }) => {
               size="1"
               variant="soft"
               color="gray"
-              onClick={() => deleteCompletedTodos.mutate({ listId })}
+              onClick={() => deleteCompletedTodos.mutate({ data: { listId } })}
             >
               <i className="fa-solid fa-eraser" />
               Clear

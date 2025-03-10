@@ -7,9 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function mergeRefs<T = any>(
-  refs: Array<
-    React.MutableRefObject<T> | React.LegacyRef<T> | undefined | null
-  >,
+  refs: Array<React.MutableRefObject<T> | React.LegacyRef<T> | undefined | null>
 ): React.RefCallback<T> {
   return (value) => {
     refs.forEach((ref) => {
@@ -21,3 +19,18 @@ export function mergeRefs<T = any>(
     });
   };
 }
+
+export const focusInputAtEnd = (inputElement: HTMLTextAreaElement | null) => {
+  if (inputElement) {
+    inputElement.focus();
+    const length = inputElement.value.length;
+    inputElement.setSelectionRange(length, length);
+  }
+};
+
+export const resizeTextArea = (inputElement: HTMLTextAreaElement | null) => {
+  if (inputElement) {
+    inputElement.style.height = "auto";
+    inputElement.style.height = `${inputElement.scrollHeight}px`;
+  }
+};

@@ -93,7 +93,7 @@ export const todo_remove = createServerFn({ method: "POST" })
 
 export const todo_removeCompleted = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator(z.object({ listId: z.string() }))
+  .validator(z.object({ listId: z.string().nullable() }))
   .handler(async ({ data: { listId }, context: { user } }) => {
     const todoIds = await db
       .selectDistinct({ id: Todo.id })
